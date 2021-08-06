@@ -1,25 +1,68 @@
-import logo from './logo.svg';
+import React, { Component } from 'react';
+import * as BooksApi from './BooksApi';
 import './App.css';
+import { Route, Link } from 'react-router-dom';
+import SearchBar from './Searchbar';
+import BookStatus from './BookCategories';
 
-function App() {
-  return (
+class App extends Component {
+  state={
+    books: []
+  }
+
+  componentDidMount() {
+    BooksApi.getAll().then((books) => {
+      this.setState({
+          books: books
+      });
+    })
+  }
+
+  moveBookShelf = (book, newValue) => {
+
+      book.props.book.shelf = newValue;
+
+      this.setState( (state) => ({
+          books: state.books.filter( (b) => b.id !== book.props.book.id).concat([book.props.book])
+      }))
+
+      BooksApi.update(book.props.book, newValue);
+
+  }
+
+  render(){
+    return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Route exact path="/" render={() => (
+            <div className="list-books">
+              <div className="list-books-title">
+                <h1>MY READS</h1>
+              </div>
+              <BookStatus
+                books={this.state.books}
+                onBookShelfChange={this.moveBookShelf}
+              />
+              <div className="open-search">
+                <Link
+                  to="/search"
+                >Add a book</Link>
+              </div>
+            </div>
+        )}
+        />
+
+        <Route path="/search" render={() => (
+            <SearchBar
+                bsBooks={this.state.books}
+                onBookShelfChange={this.moveBookShelf}
+            />
+        )}
+
+        />
     </div>
   );
+  }
+  
 }
 
 export default App;
